@@ -1,0 +1,28 @@
+server:
+  AppVersion: 1.0.0
+  Port: :5000
+  Mode: Development
+  ReadTimeout: 10
+  WriteTimeout: 10
+  CtxDefaultTimeout: 12
+  WeatherApiUrl: https://example/weather
+  WeatherSecret: 12secret34
+  Debug: false
+
+logger:
+  Development: true
+  DisableCaller: false
+  DisableStacktrace: false
+  Encoding: console
+  Level: info
+
+postgres:
+  PostgresqlHost: postgesql
+  PostgresqlPort: 5432
+  PostgresqlUser: postgres
+  PostgresqlPassword: postgres
+  PostgresqlDbname: vessels_db
+  PostgresqlSslmode: false
+  PgDriver: pgx
+
+

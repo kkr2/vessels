@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  web:
+    container_name: api
+    build:
+      context: ./
+      dockerfile: docker/Dockerfile
+    ports:
+      - "5001:5000"
+    environment:
+      - PORT=5000
+    depends_on:
+      - postgesql
+    restart: always
+    volumes:
+      - ./:/app
+    networks:
+      - web_api
+
+  postgesql:
+    image: postgres:14.5-alpine
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=vessels_db
+    volumes: 
+      - db:/var/lib/postgresql/data
+      - "./csv:/var/lib/postgresql/data/pgdata/csv"
+    networks:
+      - web_api
+
+volumes:
+  db:
+    driver: local
+
+networks:
+  web_api:
+    driver: bridge
