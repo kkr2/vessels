@@ -39,7 +39,6 @@ func (h vesselsHandlers) GetRoutesConsumtion() echo.HandlerFunc {
 			LogResponseError(c, h.logger, err)
 			return c.JSON(ErrorResponse(err))
 		}
-		// TODO: convert to response view
 		return c.JSON(http.StatusOK, NewResponseView(rowRes))
 	}
 }

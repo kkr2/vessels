@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 
 	"time"
 
@@ -80,7 +80,7 @@ func ReadRequest(ctx echo.Context, request interface{}) error {
 // Read sanitize and validate request
 func SanitizeRequest(ctx echo.Context, request interface{}) error {
 	operation := errors.Op("utils.SanitizeRequest")
-	body, err := ioutil.ReadAll(ctx.Request().Body)
+	body, err := io.ReadAll(ctx.Request().Body)
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,6 @@ func ValidateStruct(ctx context.Context, s interface{}) error {
 }
 
 // SANITIZOR
-
 var sanitizer *bluemonday.Policy
 
 func init() {

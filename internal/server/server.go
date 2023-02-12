@@ -28,11 +28,12 @@ type Server struct {
 	logger logger.Logger
 }
 
-// NewServer New Server constructor
+// NewServer instantiates the server provided the dependencies 
 func NewServer(cfg *config.Config, db *sqlx.DB, logger logger.Logger) *Server {
 	return &Server{echo: echo.New(), cfg: cfg, db: db, logger: logger}
 }
 
+// Run starts the server
 func (s *Server) Run() error {
 
 	server := &http.Server{

@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"sync"
 	"time"
@@ -21,19 +21,20 @@ type WeatherClient interface {
 
 // Ths implementation of cache is not safe. Used as an example
 // production env, key-value in memory db with TTL and eviction policy should be used
-
 type kvcache struct {
 	data map[string]float64
 	mu   sync.Mutex
 }
 
+// weatherClient is a concrete implementation of the interface WeatherClient
 type weatherClient struct {
 	cache  kvcache
 	cfg    *config.Config
 	logger logger.Logger
 }
 
-func NeweatherClient(cfg *config.Config, log logger.Logger) WeatherClient {
+// NewWeatherClient creates new weather client and creates new cache
+func NewWeatherClient(cfg *config.Config, log logger.Logger) WeatherClient {
 	return &weatherClient{
 		cfg:    cfg,
 		logger: log,
@@ -43,6 +44,7 @@ func NeweatherClient(cfg *config.Config, log logger.Logger) WeatherClient {
 	}
 }
 
+// GetWeatherForDay receives weather update for the required day and updates cache
 func (wc *weatherClient) GetWeatherForDay(ctx context.Context, t time.Time) (float64, error) {
 	operation := errors.Op("externalrpc.weatherRepository.GetWeatherForDay")
 	dayStringFormat := fmt.Sprintf("%d-%02d-%02d", t.Year(), int(t.Month()), t.Day())
@@ -62,7 +64,6 @@ func (wc *weatherClient) GetWeatherForDay(ctx context.Context, t time.Time) (flo
 	wc.cache.mu.Unlock()
 
 	return res, nil
-
 }
 
 type ReqBody struct {
@@ -72,13 +73,18 @@ type ResBody struct {
 	Beaufort float64 `json:"Beaufort"`
 }
 
+// makeExternalCall gets temperature from external weather system
 func (wc *weatherClient) makeExternalCall(dayAsString string) (float64, error) {
 
 	body := &ReqBody{
 		Date: dayAsString,
 	}
 	payloadBuf := new(bytes.Buffer)
-	json.NewEncoder(payloadBuf).Encode(body)
+	err := json.NewEncoder(payloadBuf).Encode(body)
+	if err != nil {
+		return 0, err
+	}
+
 	req, err := http.NewRequest("POST", wc.cfg.Server.WeatherApiUrl, payloadBuf)
 	if err != nil {
 		return 0, err
@@ -86,16 +92,21 @@ func (wc *weatherClient) makeExternalCall(dayAsString string) (float64, error) {
 
 	req.Header.Set("x-api-key", wc.cfg.Server.WeatherSecret)
 	req.Header.Set("Content-Type", "application/json")
+
 	client := &http.Client{}
+
 	res, err := client.Do(req)
 	if err != nil {
 		return 0, err
 	}
+
 	defer res.Body.Close()
-	resbody, err := ioutil.ReadAll(res.Body)
+
+	resbody, err := io.ReadAll(res.Body)
 	if err != nil {
 		return 0, err
 	}
+
 	var rb = new(ResBody)
 	err = json.Unmarshal(resbody, &rb)
 	if err != nil {

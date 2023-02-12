@@ -13,16 +13,14 @@ import (
 func (s *Server) MapHandlers(e *echo.Echo) error {
 
 	// Init repositories
-
-	vRepo := db.NewVesselsRepository(s.db,s.logger)
-	vClient := externalrpc.NeweatherClient(s.cfg,s.logger)
+	vRepo := db.NewVesselsRepository(s.db, s.logger)
+	vClient := externalrpc.NewWeatherClient(s.cfg, s.logger)
 
 	// Init useCases
-
-	vService := service.NewVesselsService(vRepo,vClient,s.logger)
+	vService := service.NewVesselsService(vRepo, vClient, s.logger)
 
 	// Init handlers
-	vHandler := delivery.NewVesselsHandlers(s.cfg,vService,s.logger)
+	vHandler := delivery.NewVesselsHandlers(s.cfg, vService, s.logger)
 
 	v1 := e.Group("/api/v1")
 

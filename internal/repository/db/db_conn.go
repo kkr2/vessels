@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -39,14 +38,17 @@ func NewPsqlDB(c *config.Config) (*sqlx.DB, error) {
 	if err != nil {
 		return nil, errors.E(operation, errors.KindInternal, err)
 	}
+
 	err = runMigrations(db.DB)
 	if err != nil {
 		return nil, errors.E(operation, errors.KindInternal, err)
 	}
+
 	db.SetMaxOpenConns(maxOpenConns)
 	db.SetConnMaxLifetime(connMaxLifetime * time.Second)
 	db.SetMaxIdleConns(maxIdleConns)
 	db.SetConnMaxIdleTime(connMaxIdleTime * time.Second)
+
 	if err = db.Ping(); err != nil {
 		return nil, errors.E(operation, errors.KindInternal, err)
 	}
@@ -67,7 +69,10 @@ func runMigrations(db *sql.DB) error {
 	if err != nil {
 		return errors.E(operation, errors.KindInternal, err)
 	}
-	m.Up()
-	
+
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+
 	return nil
 }

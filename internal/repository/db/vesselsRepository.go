@@ -18,6 +18,7 @@ type VesselRepo interface {
 		speed float64,
 		beaufort float64,
 	) (float64, error)
+
 	GetFuelMapWithClosestDrToTarget(
 		ctx context.Context,
 		imo int,
@@ -43,9 +44,11 @@ func (vr *vesselRepo) GetClosestConsumtion(
 	speed float64,
 	beaufort float64,
 ) (float64, error) {
+
 	operation := errors.Op("db.vesselsRepository.GetClosestConsumption")
-	//vr.log.Debug(imo,draught,speed,beaufort)
+
 	fRow := &domain.FuelMap{}
+
 	if err := vr.db.QueryRowxContext(
 		ctx, findClosestFuelConsumtion,
 		imo,
@@ -55,7 +58,6 @@ func (vr *vesselRepo) GetClosestConsumtion(
 	).StructScan(fRow); err != nil {
 		return 0, errors.E(operation, errors.KindInternal, err)
 	}
-	//vr.log.Debug(fRow.Draught)
 
 	return fRow.Consumtion, nil
 }
@@ -64,8 +66,11 @@ func (vr *vesselRepo) GetFuelMapWithClosestDrToTarget(
 	imo int,
 	draught float64,
 ) ([]*domain.FuelMap, error) {
+
 	operation := errors.Op("db.vesselsRepository.GetFuelMapWithClosestDrToTarget")
+
 	rows, err := vr.db.QueryxContext(ctx, allFuelMapsWithClosestDr, imo, draught)
+
 	if err != nil {
 		return nil, errors.E(operation, errors.KindInternal, err)
 	}

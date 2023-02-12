@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// FuelMap is a structure that describes fuelconsumption based on other properties
 type FuelMap struct {
 	ID         uuid.UUID `db:"id"`
 	VesselId   int       `db:"imo"`
@@ -16,14 +17,17 @@ type FuelMap struct {
 	Consumtion float64   `db:"consumption"`
 }
 
+// Route is a collection of route datapoints
 type Route []RouteData
 
+// RouteData is a structure that holds coordinates and date of the log
 type RouteData struct {
 	Date      time.Time `json:"date"`
 	Longitude float64   `json:"longitude"`
 	Latitude  float64   `json:"latitude"`
 }
 
+// PointToPoint is a structure that holds information regarding 2 subsequent route datapoints
 type PointToPoint struct {
 	Source               RouteData
 	Destination          RouteData
@@ -103,5 +107,4 @@ func (point *PointToPoint) AddConsumtion(avgConsumption float64) {
 	dayFraction := point.TimeDiffInMins / float64(1440)
 
 	point.ExactConsumtion = avgConsumption * dayFraction
-
 }

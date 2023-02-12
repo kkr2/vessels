@@ -8,14 +8,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-// App config struct
+// Config holds all server configuration
 type Config struct {
 	Server   ServerConfig
 	Postgres PostgresConfig
 	Logger   Logger
 }
 
-// Server config struct
+// ServerConfig has all servec config properties
 type ServerConfig struct {
 	AppVersion        string
 	Port              string
@@ -37,7 +37,7 @@ type Logger struct {
 	Level             string
 }
 
-// Postgresql config
+// PostgresConfig holds all the postgres configuration vars
 type PostgresConfig struct {
 	PostgresqlHost     string
 	PostgresqlPort     string

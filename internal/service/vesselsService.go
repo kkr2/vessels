@@ -11,28 +11,33 @@ import (
 	"github.com/kkr2/vessels/internal/repository/externalrpc"
 )
 
-// 1) Converts route to knot(speed)
-// Given route , calculate average speed from point to point [] {src , dst , avgSpeed }
+/*
+	1) Converts route to knot(speed)
+	Given route , calculate average speed from point to point [] {src , dst , avgSpeed }
 
-// 2) Get weather raport based on days.
-// Given routes extract all days and get results . Client call + cache(mention).
+	2) Get weather raport based on days.
+	Given routes extract all days and get results . Client call + cache(mention).
 
-// 3) Calculate aproximate consumption based on weather speed drought, refering to fuelTable
-// Problem to be solved is if result we are searching is in between rows
-// PRIORITY : Draught , Weather, Speed
-// Optimisation: Get from db only what needed in between range
-//(closest Drought existing in db)
+	3) Calculate aproximate consumption based on weather speed drought, refering to fuelTable
+	Problem to be solved is if result we are searching is in between rows
+	PRIORITY : Draught , Weather, Speed
+	Optimisation: Get from db only what needed in between range
+	(closest Drought existing in db)
+*/
 
+// VesselService is an interface for accessing vessel usecases
 type VesselService interface {
 	GetRoutesConsumtion(ctx context.Context, imo int, drought float64, vesselRoutes []*domain.Route) ([]float64, error)
 }
 
+// vesselService is a concrete implementation of the above interface
 type vesselService struct {
 	fuelRepo      db.VesselRepo
 	weatherClient externalrpc.WeatherClient
 	logger        logger.Logger
 }
 
+// NewVesselsService makes a new vessel service provided the external dependencies
 func NewVesselsService(fr db.VesselRepo, wc externalrpc.WeatherClient, log logger.Logger) VesselService {
 	return &vesselService{
 		fuelRepo:      fr,
@@ -41,12 +46,7 @@ func NewVesselsService(fr db.VesselRepo, wc externalrpc.WeatherClient, log logge
 	}
 }
 
-type conResponse struct {
-	index int
-	res   float64
-	err   error
-}
-
+// GetRoutesConsumtion provides all routes consumtion based on provided imo and drought  
 func (vs *vesselService) GetRoutesConsumtion(ctx context.Context, imo int, drought float64, vesselRoutes []*domain.Route) ([]float64, error) {
 	// TODO: Add validation
 	allRouteFuelConsumtion := []float64{}
@@ -69,7 +69,7 @@ func (vs *vesselService) GetRoutesConsumtion(ctx context.Context, imo int, droug
 	return allRouteFuelConsumtion, nil
 }
 
-// Calculates single route
+// getRouteConsumtion provides consumption for a single route
 func (vs *vesselService) getRouteConsumtion(ctx context.Context, fuelMap []*domain.FuelMap, vesselRoute *domain.Route) (float64, error) {
 	//calculate avg speed point to point
 	pointToPoints := vesselRoute.ConvertToP2P()
@@ -85,7 +85,7 @@ func (vs *vesselService) getRouteConsumtion(ctx context.Context, fuelMap []*doma
 	return calculateTotalConsumtion(pointToPoints), nil
 }
 
-// Updates pointToPoint data structure with weather information
+// calculateWeather updates pointToPoint data structure with weather information
 func (vs *vesselService) calculateWeather(ctx context.Context, pointToPoints []*domain.PointToPoint) error {
 	for _, ptp := range pointToPoints {
 		ptp := ptp
@@ -103,7 +103,7 @@ func (vs *vesselService) calculateWeather(ctx context.Context, pointToPoints []*
 	return nil
 }
 
-// Updates pointToPoint data structure with avg fuel consumption info
+// calculateConsumption updates pointToPoint data structure with avg fuel consumption info
 func (vs *vesselService) calculateConsumption(ctx context.Context, fuelMap []*domain.FuelMap, pointToPoints []*domain.PointToPoint) {
 	for _, ptp := range pointToPoints {
 		ptp := ptp
@@ -114,7 +114,7 @@ func (vs *vesselService) calculateConsumption(ctx context.Context, fuelMap []*do
 	}
 }
 
-// Gets closest sum from fuelmap provided by db, based on weather and speed (since closes to drought is provided by db)
+// getClosestConsumtion gets closest sum from fuelmap provided by db, based on weather and speed (since closes to drought is provided by db)
 func getClosestConsumtion(fuelMap []*domain.FuelMap, speed float64, weather float64) float64 {
 	sort.Slice(fuelMap, func(i, j int) bool {
 		if math.Abs(fuelMap[i].Weather-weather) != math.Abs(fuelMap[j].Weather-weather) {
@@ -127,7 +127,7 @@ func getClosestConsumtion(fuelMap []*domain.FuelMap, speed float64, weather floa
 	return fuelMap[0].Consumtion
 }
 
-// Helper function to add all exact consumtion from point to point data
+// calculateTotalConsumtion is a helper function to add all exact consumtion from point to point data
 func calculateTotalConsumtion(pointToPoints []*domain.PointToPoint) float64 {
 	totalConsumption := 0.0
 	for _, ptp := range pointToPoints {

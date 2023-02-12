@@ -5,7 +5,7 @@ import (
 )
 
 type GetRoutesConsumptionRequest struct {
-	Imo     int            `json:"imo" validate:"required"`
-	Draught float64        `json:"draught" validate:"required"`
+	Imo     int             `json:"imo" validate:"required"`
+	Draught float64         `json:"draught" validate:"required"`
 	Routes  []*domain.Route `json:"routes" validate:"required"`
 }
